@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EEA Member Cloud</title>
+<style>
+  :root{
+    --bg: transparent;
+    --text:#0A2A6B;
+    --tooltip-bg: #0a2a6be6;
+    --tooltip-text: #fff;
+    --focus-ring: #1E5AF3;
+    /* Distinct, professional palette */
+    --level-1:#16A34A; /* green  */
+    --level-2:#0D9488; /* teal   */
+    --level-3:#2563EB; /* blue   */
+    --level-4:#7C3AED; /* purple */
+    --dot-stroke:#0F172A;
+  }
+  html, body {height:100%;}
+  body{
+    margin:0; background:var(--bg);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color:var(--text);
+  }
+  /* Top bar */
+  .bar{position:fixed;inset-block-start:0;inset-inline:0;display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.9);backdrop-filter:blur(6px);border-bottom:1px solid #e6ecff;z-index:20}
+  .bar h1{font-size:16px;margin:0}
+  .bar .controls{display:flex;gap:10px;align-items:center}
+  .bar input[type="file"]{display:none;}
+  .button{border:1px solid #d9e0ff;background:#f6f8ff;color:#0a2a6b;border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
+  .hint{font-size:12px;color:#334155;opacity:.8}
+  .badge{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid #c9d4ff;background:#eef2ff;color:#0a2a6b}
+  .wrap{padding-block-start:58px;}
+  /* Cloud */
+  .cloud-wrap{position:relative;width:100%;height:82vh;min-height:560px;display:grid;place-items:stretch}
+  .cloud{width:100%;height:100%;display:block;}
+  /* Legend */
+  .legend{position:absolute;left:16px;top:16px;z-index:15;background:#fff;border:1px solid #e6ecff;border-radius:12px;padding:8px 10px;box-shadow:0 8px 20px rgba(10,42,107,.08);font-size:12px;color:#0a2a6b}
+  .legend h4{margin:0 0 6px 0;font-size:12px;font-weight:600}
+  .legend ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+  .legend li{display:flex;align-items:center;gap:8px}
+  .dot{width:12px;height:12px;border-radius:999px;border:1px solid var(--dot-stroke)}
+  .c1{background:var(--level-1)} .c2{background:var(--level-2)}
+  .c3{background:var(--level-3)} .c4{background:var(--level-4)}
+  /* Tooltip */
+  .tooltip{position:absolute;pointer-events:none;z-index:10;background:var(--tooltip-bg);color:var(--tooltip-text);padding:.75rem .9rem;border-radius:.75rem;box-shadow:0 8px 24px rgba(0,0,0,.18);backdrop-filter:saturate(1.2) blur(4px);transform:translate(-50%, calc(-100% - 14px));opacity:0;transition:opacity .15s ease, transform .15s ease;}
+  .tooltip.show{opacity:1;transform:translate(-50%, calc(-100% - 8px));}
+  .tooltip .logo{inline-size:32px;block-size:32px;border-radius:.4rem;object-fit:contain;background:#fff;margin-right:.6rem;}
+  .tooltip .row{display:flex;align-items:center;gap:.6rem;margin:0 0 .25rem 0;}
+  .tooltip .name{font-weight:600;letter-spacing:.2px;}
+  .tooltip .meta{font-size:.82rem;opacity:.85;margin-top:.15rem;}
+  /* Nodes */
+  .node-label{font-size:12px;font-weight:600;fill:var(--text);dominant-baseline:middle;text-anchor:middle;pointer-events:none;}
+  .focus-ring{fill:none;stroke:var(--focus-ring);stroke-width:3;opacity:0;}
+  g[tabindex="0"]:focus .focus-ring{opacity:.9;}
+  /* Details */
+  .details{position:absolute;right:16px;top:16px;bottom:16px;inline-size:min(420px, 92vw);background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(10,42,107,.18);border:1px solid rgba(10,42,107,.1);padding:16px 16px 20px 16px;display:grid;grid-template-rows:auto 1fr;gap:12px;overflow:auto;}
+  .details[hidden]{display:none;}
+  .details-close{position:absolute;right:12px;top:12px;border:0;background:#f5f7ff;border-radius:10px;padding:6px 10px;cursor:pointer;color:#0a2a6b;}
+  .details-header{display:flex;gap:12px;align-items:center;margin-top:8px;}
+  .details-logo{inline-size:40px;block-size:40px;border-radius:8px;background:#fff;object-fit:contain}
+  .details-title h3{margin:0 0 4px 0;}
+  .muted{margin:0;color:#475569;font-size:.9rem}
+  .details-grid{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;margin:8px 0 0 0}
+  .details-grid dt{font-weight:600;color:#334155}
+  .details-grid dd{margin:0;color:#0f172a}
+  .details a{color:#2563EB;text-decoration:underline;}
+  [data-admin-only]{display:none;} /* show via JS when admin */
+  /* Error panel */
+  .error-panel{position:fixed;left:16px;bottom:16px;z-index:30;background:#fff4f4;border:1px solid #fecaca;color:#991b1b;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:10px 12px;max-width:min(520px, 92vw);font-size:12px;line-height:1.3}
+  .error-panel strong{font-weight:700;}
+  .ok{color:#065f46}
+  @media (max-width:640px){ .details{inline-size:min(92vw,420px)} .tooltip{max-inline-size:75vw} }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>EEA Member Cloud</h1>
+    <div class="controls">
+      <span id="admin-badge" class="badge" style="display:none;">Admin view</span>
+      <span class="hint">Load via <code>?data=members.csv</code> | Toggle admin:</span>
+      <button id="toggle-admin" class="button">Admin: Off</button>
+      <label class="button" for="file-input">Load CSV / JSON</label>
+      <input id="file-input" type="file" accept=".csv,.json, text/csv, application/json" />
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="cloud-wrap" id="member-cloud-root" aria-label="EEA Member Cloud visualization">
+      <!-- Legend -->
+      <div class="legend" aria-hidden="true">
+        <h4>EEA membership class</h4>
+        <ul>
+          <li><span class="dot c1"></span> 1</li>
+          <li><span class="dot c2"></span> 2</li>
+          <li><span class="dot c3"></span> 3</li>
+          <li><span class="dot c4"></span> 4</li>
+        </ul>
+      </div>
+
+      <!-- Tooltip -->
+      <div id="tooltip" class="tooltip" role="dialog" aria-live="polite">
+        <div class="row">
+          <img class="logo" id="tt-logo" alt="" />
+          <div>
+            <div class="name" id="tt-name"></div>
+            <div class="meta" id="tt-tier"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <aside id="details" class="details" aria-live="polite" aria-label="Member details" hidden>
+        <button id="details-close" class="details-close" aria-label="Close details">✕</button>
+        <div class="details-header">
+          <img id="details-logo" class="details-logo" alt="" />
+          <div class="details-title">
+            <h3 id="details-name">Member</h3>
+            <p id="details-class" class="muted" hidden></p>
+          </div>
+        </div>
+        <dl class="details-grid">
+          <dt data-admin-only>Record ID</dt><dd data-admin-only id="details-id">—</dd>
+          <dt>Company</dt><dd id="details-company">—</dd>
+          <dt>About</dt><dd id="details-description">—</dd>
+          <dt>URL</dt><dd id="details-url">—</dd>
+          <dt data-admin-only>Country/Region of operations</dt><dd data-admin-only id="details-country">—</dd>
+          <dt>Industry category</dt><dd id="details-industry">—</dd>
+          <dt data-admin-only>Member category</dt><dd data-admin-only id="details-tier">—</dd>
+          <dt>X</dt><dd id="details-x">—</dd>
+          <dt>LinkedIn</dt><dd id="details-linkedin">—</dd>
+        </dl>
+      </aside>
+    </div>
+  </div>
+
+  <div id="err" class="error-panel" style="display:none;"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script>
+  (function(){
+    const root = document.getElementById('member-cloud-root');
+    const errBox = document.getElementById('err');
+
+    // --- Admin toggle ---
+    const params = new URLSearchParams(location.search);
+    const IS_ADMIN = params.get('admin') === '1';
+    const adminBadge = document.getElementById('admin-badge');
+    const adminBtn = document.getElementById('toggle-admin');
+    if(IS_ADMIN){ adminBadge.style.display='inline-block'; adminBtn.textContent='Admin: On'; }
+    adminBtn.addEventListener('click', ()=>{
+      const p = new URLSearchParams(location.search);
+      if(p.get('admin') === '1') p.delete('admin'); else p.set('admin','1');
+      location.search = p.toString();
+    });
+
+    // Height safety for file://
+    function ensureHeight(){
+      const h = Math.max(560, Math.floor((window.innerHeight || 900) * 0.82));
+      root.style.minHeight = h + 'px';
+      root.style.height = h + 'px';
+    }
+    ensureHeight(); window.addEventListener('resize', ensureHeight, {passive:true});
+
+    // Error helper
+    function showError(msg, detail){
+      errBox.style.display = 'block';
+      errBox.innerHTML = `<strong>Load error</strong><br>${msg}${detail?`<br><small>${detail}</small>`:''}`;
+      console.error('[EEA Cloud]', msg, detail || '');
+    }
+    function showInfo(msg){
+      errBox.style.display = 'block';
+      errBox.innerHTML = `<span class="ok">✔</span> ${msg}`;
+      setTimeout(()=>{ errBox.style.display='none'; }, 3000);
+      console.log('[EEA Cloud]', msg);
+    }
+
+    // File picker
+    document.getElementById('file-input').addEventListener('change', async (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if(!file) return;
+      try{
+        const text = await file.text();
+        const rows = smartParse(text);
+        const data = normalizeRows(rows);
+        if(!data.length){ showError('No usable rows found in the file. Make sure your CSV has a header row.'); return; }
+        renderCloud(data);
+        showInfo(`Loaded ${data.length} members from “${file.name}”.`);
+      }catch(err){ showError('Could not read that file.', err.message || String(err)); }
+    });
+
+    // Query-param loader (http only)
+    requestAnimationFrame(async ()=>{
+      const dataPath = params.get('data') || '';
+      if(!dataPath) return;
+      try{
+        const lower = dataPath.toLowerCase();
+        if(lower.endsWith('.csv')){
+          const resp = await fetch(dataPath, {cache:'no-store'});
+          const text = await resp.text();
+          const rows = smartParse(text);
+          const data = normalizeRows(rows);
+          if(!data.length){ showError('CSV loaded but contained no usable rows.'); return; }
+          renderCloud(data);
+          showInfo(`Loaded ${data.length} members from “${dataPath}”.`);
+        }else if(lower.endsWith('.json')){
+          const resp = await fetch(dataPath, {cache:'no-store'});
+          const json = await resp.json();
+          const rows = Array.isArray(json) ? json : (json.data || json.rows || []);
+          const data = normalizeRows(rows);
+          if(!data.length){ showError('JSON loaded but contained no usable rows.'); return; }
+          renderCloud(data);
+          showInfo(`Loaded ${data.length} members from “${dataPath}”.`);
+        }
+      }catch(err){ showError('Fetch failed (often due to opening the file directly). Use the “Load CSV / JSON” button or run a local server.', err.message||String(err)); }
+    });
+
+    // --- Smart CSV parser: handles BOM, NBSP, semicolons, etc. ---
+    function cleanStr(s){
+      return String(s||'')
+        .replace(/\uFEFF/g,'')       // BOM
+        .replace(/[\u200B-\u200D]/g,'') // zero-width
+        .replace(/[\u00A0\u2007\u202F]/g,' ') // NBSPs -> space
+        .trim();
+    }
+    function smartParse(text){
+      if(!window.d3 || !d3.csvParse){ throw new Error('D3 failed to load. Check your network.'); }
+      const cleaned = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+      // Detect delimiter by first non-empty line
+      const firstLine = cleaned.split('\n').find(l => l.trim().length>0) || '';
+      const commaCount = (firstLine.match(/,/g)||[]).length;
+      const semiCount  = (firstLine.match(/;/g)||[]).length;
+      const delim = semiCount > commaCount ? ';' : ',';
+      const parser = d3.dsvFormat(delim);
+      const rows = parser.parse(cleaned);
+      // sanitize keys & values
+      return rows.map(row=>{
+        const out = {};
+        for(const k in row){
+          if(!Object.prototype.hasOwnProperty.call(row,k)) continue;
+          out[cleanStr(k)] = cleanStr(row[k]);
+        }
+        return out;
+      });
+    }
+
+    // --- Normalize rows to our schema ---
+    function normalizeRows(rows){
+      return rows.map((row, i)=>{
+        const map = {};
+        for(const k in row){
+          if(!Object.prototype.hasOwnProperty.call(row,k)) continue;
+          map[cleanStr(k).toLowerCase()] = cleanStr(row[k]);
+        }
+        const val = (...keys)=> {
+          for(const k of keys){
+            const kk = k.toLowerCase();
+            if(map[kk] != null && map[kk] !== '') return map[kk];
+          }
+          return '';
+        };
+
+        const recordId = val('tag record id','record id','id','rid');
+        const company  = val('company','company name','companyname','organization','org','label','name') || `Member ${i+1}`;
+        const description = val('about','description','desc','bio','summary');
+        const website = val('website url','url','website','site','homepage');
+        const country = val('country/region of operations','country / region of operations','country','region','location');
+        const industry = val('industry category','industry','industry tag test','industry tag','sector','vertical');
+        const membershipClassRaw = val('eea membership class','membership class','member category','class','tier','membership','eea class');
+        const membershipLevel = parseLevel(membershipClassRaw);
+        const logo = val('logo','logo url','image','icon');
+        const x = val('x','x handle','twitter','twitter handle','x username','twitter username');
+        const linkedin = val('linkedin','linkedin url','linkedin company','linkedin page','linked in');
+
+        return { recordId, company, description, website, country, industry, membershipClass: membershipClassRaw, membershipLevel, logo, x, linkedin };
+      }).filter(d => d.company && d.company !== '-');
+    }
+
+    // Extract 1..4 from class text
+    function parseLevel(v){
+      if(v == null) return 2;
+      const s = String(v).trim();
+      if(!s) return 2;
+      const n = Number(s);
+      if(Number.isFinite(n) && n >= 1 && n <= 4) return n|0;
+      const m = s.match(/[1-4]/);
+      return m ? Number(m[0]) : 2;
+    }
+
+    // --- Visualization ---
+    let resizeHandler = null;
+
+    function renderCloud(data){
+      // hide previous error/info
+      errBox.style.display = 'none';
+
+      // Clean up any previous svg & listener
+      d3.select(root).select('svg.cloud').remove();
+      if(resizeHandler){ window.removeEventListener('resize', resizeHandler); }
+
+      // Show/hide admin-only fields
+      document.querySelectorAll('[data-admin-only]').forEach(el=>{
+        el.style.display = IS_ADMIN ? 'inline' : 'none';
+      });
+      adminBadge.style.display = IS_ADMIN ? 'inline-block' : 'none';
+
+      // DOM refs
+      const tooltip = document.getElementById('tooltip');
+      const ttLogo = document.getElementById('tt-logo');
+      const ttName = document.getElementById('tt-name');
+      const ttTier = document.getElementById('tt-tier');
+      const details = document.getElementById('details');
+      const detailsClose = document.getElementById('details-close');
+      const dLogo = document.getElementById('details-logo');
+      const dName = document.getElementById('details-name');
+      const dId = document.getElementById('details-id');
+      const dCompany = document.getElementById('details-company');
+      const dDesc = document.getElementById('details-description');
+      const dUrl = document.getElementById('details-url');
+      const dCountry = document.getElementById('details-country');
+      const dIndustry = document.getElementById('details-industry');
+      const dTier = document.getElementById('details-tier');
+      const dX = document.getElementById('details-x');
+      const dLinkedIn = document.getElementById('details-linkedin');
+      detailsClose.onclick = ()=> details.hidden = true;
+
+      // Size
+      const rect = root.getBoundingClientRect();
+      let W = Math.max(320, rect.width || window.innerWidth || 1000);
+      let H = Math.max(560, rect.height || Math.floor((window.innerHeight||900)*0.82));
+
+      const svg = d3.select(root).append('svg')
+        .attr('class','cloud')
+        .attr('width', W)
+        .attr('height', H)
+        .attr('role','img')
+        .attr('aria-label','Interactive cluster of EEA members');
+
+      const g = svg.append('g');
+
+      const css = getComputedStyle(document.documentElement);
+      const levelToColor = new Map([
+        [1, css.getPropertyValue('--level-1').trim()],
+        [2, css.getPropertyValue('--level-2').trim()],
+        [3, css.getPropertyValue('--level-3').trim()],
+        [4, css.getPropertyValue('--level-4').trim()],
+      ]);
+
+      const rScale = d3.scaleLinear().domain([1,4]).range([26, 52]);
+
+      // Build nodes
+      const nodes = data.map((d,i)=>{
+        const lvl = (d.membershipLevel>=1 && d.membershipLevel<=4) ? d.membershipLevel : 2;
+        const r = rScale(lvl);
+        return {
+          id:i, ...d, r,
+          color: levelToColor.get(lvl) || css.getPropertyValue('--level-2').trim(),
+          x: Math.random() * (W - 2*r) + r,
+          y: Math.random() * (H - 2*r) + r
+        };
+      });
+
+      const node = g.selectAll('g.node')
+        .data(nodes, d=>d.id)
+        .join(enter=>{
+          const gn = enter.append('g')
+            .attr('class','node')
+            .attr('tabindex', 0)
+            .attr('role','button')
+            .attr('aria-label', d=> `${d.company}. Activate for details.`)
+            .style('cursor','pointer')
+            .on('click', (event,d)=> showDetails(d))
+            .on('keydown', (event,d)=>{ if(event.key==='Enter'||event.key===' '){ event.preventDefault(); showDetails(d); }})
+            .on('pointerenter', (event,d)=> showTooltip(event,d))
+            .on('pointermove', (event)=> moveTooltip(event))
+            .on('pointerleave', hideTooltip);
+
+          gn.append('circle').attr('class','focus-ring').attr('r', d=>d.r+6);
+
+          gn.append('circle')
+            .attr('r', d=>d.r)
+            .attr('fill', d => d.color)
+            .attr('fill-opacity', .16)
+            .attr('stroke', d => d.color)
+            .attr('stroke-width', 2);
+
+          gn.append('text')
+            .attr('class','node-label')
+            .text(d => shorten(d.company));
+
+          return gn;
+        });
+
+      // initial placement
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+
+      // Simulation
+      const simulation = d3.forceSimulation(nodes)
+        .force('x', d3.forceX(W/2).strength(0.04))
+        .force('y', d3.forceY(H/2).strength(0.05))
+        .force('collision', d3.forceCollide().radius(d => d.r + 3).iterations(2))
+        .alpha(1)
+        .on('tick', ()=> node.attr('transform', d => `translate(${d.x},${d.y})`));
+      for(let i=0;i<60;i++) simulation.tick();
+
+      // Resize handler (replace previous)
+      resizeHandler = ()=>{
+        ensureHeight();
+        const r2 = root.getBoundingClientRect();
+        W = Math.max(320, r2.width || window.innerWidth || 1000);
+        H = Math.max(560, r2.height || Math.floor((window.innerHeight||900)*0.82));
+        svg.attr('width', W).attr('height', H);
+        simulation.force('x', d3.forceX(W/2).strength(0.04));
+        simulation.force('y', d3.forceY(H/2).strength(0.05));
+        simulation.alpha(0.5).restart();
+      };
+      window.addEventListener('resize', resizeHandler, {passive:true});
+
+      // Helpers
+      function shorten(name){
+        const max = 18;
+        if(!name) return '—';
+        if(name.length <= max) return name;
+        const parts = name.split(/\s+/);
+        if(parts.length>1){
+          const s = `${parts[0]} … ${parts[parts.length-1]}`;
+          return s.length<=max ? s : name.slice(0,max-1)+'…';
+        }
+        return name.slice(0,max-1)+'…';
+      }
+      function showTooltip(evt, d){
+        ttName.textContent = d.company || '';
+        if(IS_ADMIN && (d.membershipClass || d.membershipLevel)){
+          const lvlTxt = d.membershipLevel ? ` (level ${d.membershipLevel})` : '';
+          ttTier.textContent = `Member category: ${d.membershipClass || ''}${lvlTxt}`;
+          ttTier.style.display = 'block';
+        } else { ttTier.textContent = ''; ttTier.style.display = 'none'; }
+        if(d.logo){ ttLogo.src = d.logo; ttLogo.style.display='block'; ttLogo.alt = (d.company||'') + ' logo'; }
+        else { ttLogo.removeAttribute('src'); ttLogo.style.display='none'; ttLogo.alt=''; }
+        tooltip.classList.add('show'); moveTooltip(evt);
+      }
+      function moveTooltip(evt){
+        const b = root.getBoundingClientRect();
+        const x = Math.max(12, Math.min(evt.clientX - b.left, b.width - 12));
+        const y = Math.max(12, Math.min(evt.clientY - b.top,  b.height - 12));
+        tooltip.style.left = x + 'px'; tooltip.style.top  = y + 'px';
+      }
+      function hideTooltip(){ tooltip.classList.remove('show'); }
+      function showDetails(d){
+        dName.textContent = d.company || 'Member';
+        dCompany.textContent = d.company || '—';
+        dDesc.textContent = d.description || '—';
+        dIndustry.textContent = d.industry || '—';
+
+        if(IS_ADMIN){
+          dId.textContent = d.recordId || '—';
+          dCountry.textContent = d.country || '—';
+          dTier.textContent = (d.membershipClass ? `${d.membershipClass}` : '—') + (d.membershipLevel ? ` (level ${d.membershipLevel})` : '');
+          const classLine = document.getElementById('details-class');
+          classLine.textContent = d.membershipLevel ? `Member category level ${d.membershipLevel}` : '';
+          classLine.hidden = !d.membershipLevel;
+        } else { document.getElementById('details-class').hidden = true; }
+
+        if(d.website){
+          let url = d.website; if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+          dUrl.innerHTML = `<a href="${url}" target="_blank" rel="nofollow noopener">${url}</a>`;
+        } else dUrl.textContent = '—';
+
+        if(d.x){
+          const xUrl = /^https?:\/\//i.test(d.x) ? d.x : `https://x.com/${String(d.x).replace(/^@/, '')}`;
+          dX.innerHTML = `<a href="${xUrl}" target="_blank" rel="nofollow noopener">${xUrl}</a>`;
+        } else dX.textContent = '—';
+
+        if(d.linkedin){
+          const liUrl = /^https?:\/\//i.test(d.linkedin) ? d.linkedin : `https://www.linkedin.com/company/${String(d.linkedin).replace(/^@/, '')}`;
+          dLinkedIn.innerHTML = `<a href="${liUrl}" target="_blank" rel="nofollow noopener">${liUrl}</a>`;
+        } else dLinkedIn.textContent = '—';
+
+        if(d.logo){ dLogo.src = d.logo; dLogo.style.display='block'; dLogo.alt = (d.company||'') + ' logo'; }
+        else { dLogo.removeAttribute('src'); dLogo.style.display='none'; dLogo.alt=''; }
+
+        details.hidden = false;
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
+
