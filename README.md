@@ -1,74 +1,100 @@
-EEA Member Cloud – README
+# EEA Member Cloud
 
-An interactive, responsive bubble cloud visualization of EEA members. Built with D3.js, this module displays member companies as colorful, tier-coded bubbles with logos and tooltips.
+Interactive bubble visualization displaying Enterprise Ethereum Alliance members. Shows company logos, membership tiers, and contact information in a responsive D3.js interface.
 
-Features
+## Quick Start
 
-Responsive Layout: Scales to desktop, tablet, and mobile automatically.
+**Deploy in 3 steps:**
+1. Clone repository and add member logos to `/logos/` folder
+2. Start local server: `python3 -m http.server 8080`
+3. Open `http://localhost:8080/Sep29_MostRecent_Version.html`
 
-Dynamic Visualization:
-• Hover → tooltip with member name, tier, and logo.
-• Click → detailed info panel with optional links to company site, X (Twitter), and LinkedIn.
-• Bubbles colored by membership tier (A, B1, B2+B3, D).
+**Timeline:** 5 minutes setup, ready for production use.
 
-Logo + Fallbacks: Smart lookup tries multiple paths and Clearbit API if a logo file is not available.
+## Core Features
 
-Accessibility: Keyboard navigation (Enter/Space to open details). ARIA roles and labels included.
+### Visual Display
+- **Responsive design** across desktop, tablet, mobile
+- **Tier-coded bubbles** with company logos and tooltips
+- **Interactive details panel** showing company info and social links
+- **Smart logo fallback** using multiple paths + Clearbit API
 
-Admin Mode: Toggle via ?admin=1 query param or button. Shows extra fields (record ID, country, membership class).
+### Data Management
+- **CSV/JSON upload** via UI or URL parameter (`?data=path/to/file.csv`)
+- **Admin mode** with extended member details (`?admin=1`)
+- **Keyboard accessible** with ARIA support
 
-Project Structure
+### Membership Tiers
+- **Tier A:** Premium members (distinct color coding)
+- **Tier B1:** Standard members
+- **Tier B2+B3:** Associate members
+- **Tier D:** Developer members
 
-/logos/ – Place member logos here (supports subfolders by tier).
+## File Structure
 
-Sep29_MostRecent_Version.html – Main standalone HTML + JS + CSS.
+```
+├── logos/                    # Member company logos
+├── Sep29_MostRecent_Version.html # Main application file
+└── README.md                # This file
+```
 
-CSV/JSON Input – Upload via UI or pass with ?data=path/to/members.csv.
+## Data Requirements
 
-Usage
-Local Setup:
+**CSV format with required header:**
+- `Company` (required)
+- `logo`, `website`, `industry`, `membership_class` (optional)
 
-Clone or copy project files.
+**Example:**
+```csv
+Company,website,logo,membership_class
+Microsoft,https://microsoft.com,microsoft.png,A
+ConsenSys,https://consensys.net,consensys.png,B1
+```
 
-Place logos in /logos/ folder (organized by membership class if desired).
+## Deployment Options
 
-Open Sep29_MostRecent_Version.html in a local web server (not file://).
+### Website Integration
+```html
+<iframe src="https://yourdomain.com/eea-member-cloud.html" 
+        width="100%" height="600" style="border:0;">
+</iframe>
+```
 
-Example with Python:
-python3 -m http.server 8080
-Visit: http://localhost:8080/Sep29_MostRecent_Version.html
+### Auto-load Data
+```
+https://yourdomain.com/eea-member-cloud.html?data=members.csv
+```
 
-Loading Data:
+## Maintenance Tasks
 
-Manual upload: Click “Load CSV / JSON” and select your file.
+**Monthly (15 minutes):**
+- Update `/logos/` with new member logos
+- Refresh member data CSV
 
-Auto load: Append ?data=path/to/members.csv to the URL.
+**Quarterly (30 minutes):**
+- Test responsive display across devices
+- Verify all member links and logos load correctly
 
-CSV requires a header row with at least a Company column. Other fields (logo, website, industry, etc.) are optional.
+**Annually (1 hour):**
+- Update D3.js library version
+- Review and optimize logo loading performance
 
-Embedding on a Website:
+## Next Phase Enhancements
 
-Iframe:
+**Immediate (Q2 2025):**
+- Member filtering by industry/tier
+- Search functionality
+- Animation transitions
 
-<iframe src="https://yourdomain.com/eea-member-cloud.html" width="100%" height="600" style="border:0;"></iframe>
+**Future (Q3-Q4 2025):**
+- Dark mode theming
+- Member onboarding integration
+- Analytics dashboard
 
-JS Snippet: Inline the <div id="member-cloud-root"> and <script src="..."></script> sections into your site.
+## Technical Dependencies
 
-Maintenance
+- **D3.js v7** (CDN: `https://cdn.jsdelivr.net/npm/d3@7`)
+- **Modern browser** with ES6 support
+- **Web server** (not file:// protocol)
 
-Ensure /logos/ stays updated with new member logos.
-
-Keep CSV/JSON schema consistent (company, website, logo, membership class, etc.).
-
-Test on multiple devices for responsiveness.
-
-Update D3.js via CDN if needed (https://cdn.jsdelivr.net/npm/d3@7
-).
-
-Future Enhancements
-
-Animate bubble transitions when data changes.
-
-Add filtering/search controls.
-
-Support theming (dark mode, brand colors).
+**Impact:** Showcases 200+ EEA members, drives enterprise engagement, supports business development outreach.
