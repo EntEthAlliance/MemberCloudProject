@@ -7,7 +7,7 @@ Interactive bubble visualization displaying Enterprise Ethereum Alliance members
 **Deploy in 3 steps:**
 1. Clone repository and add member logos to `/logos/` folder
 2. Start local server: `python3 -m http.server 8080`
-3. Open `http://localhost:8080/Sep29_MostRecent_Version.html`
+3. Open `http://localhost:8080/L2Updated_FinalVersion.html`
 
 **Timeline:** 5 minutes setup, ready for production use.
 
@@ -34,7 +34,7 @@ Interactive bubble visualization displaying Enterprise Ethereum Alliance members
 
 ```
 ├── logos/                    # Member company logos
-├── Sep29_MostRecent_Version.html # Main application file
+├── L2Updated_FinalVersion.html # Main application file
 └── README.md                # This file
 ```
 
@@ -79,17 +79,93 @@ https://yourdomain.com/eea-member-cloud.html?data=members.csv
 - Update D3.js library version
 - Review and optimize logo loading performance
 
-## Next Phase Enhancements
 
-**Immediate (Q2 2025):**
-- Member filtering by industry/tier
-- Search functionality
-- Animation transitions
+# Member Cloud Visualization – WordPress Integration Guide
 
-**Future (Q3-Q4 2025):**
-- Dark mode theming
-- Member onboarding integration
-- Analytics dashboard
+This guide explains how to deploy and embed the **Member Cloud visualization** (powered by D3.js) on a WordPress site.  
+It uses a **self-contained HTML file (`L2Updated_FinalVersion.html`)** and a set of **SVG logo assets**.
+
+---
+
+## Folder Overview
+
+Your project folder should look like this before upload:
+
+Member_Cloud_Project/
+├── L2Updated_FinalVersion.html
+├── edited_logos/
+│ ├── Accenture.svg
+│ ├── Chainlink Labs.svg
+│ ├── EY.svg
+│ └── ... (other logo files)
+
+## 🚀 Step 1: Create a Folder in WordPress Uploads Directory
+
+1. Connect to your WordPress site via **FTP**, **SFTP**, or your hosting file manager.
+2. Navigate to:
+/wp-content/uploads/
+
+3. Create a new folder called:
+member-cloud
+
+Copy code
+4. Upload the following files and folders into it:
+/wp-content/uploads/member-cloud/
+├── L2Updated_FinalVersion.html
+├── edited_logos/
+│ ├── Accenture.svg
+│ ├── Chainlink Labs.svg
+│ ├── ...etc.
+
+After upload, your files will be accessible at:
+
+- HTML file:  
+`https://example.com/wp-content/uploads/member-cloud/L2Updated_FinalVersion.html`
+
+- Logo folder:  
+`https://example.com/wp-content/uploads/member-cloud/edited_logos/`
+
+---
+
+## Step 2: Verify That File Paths Work
+
+Open one of the logo URLs directly in your browser to confirm it’s public, for example:
+
+https://example.com/wp-content/uploads/member-cloud/edited_logos/Accenture.svg
+
+If the image loads, everything is correctly hosted.
+
+---
+
+##  Step 3: Embed the Cloud Visualization in a WordPress Page
+
+There are **two main options** for integration.  
+The recommended and easiest one is the **iframe embed**.
+
+### **Option A: Use an iframe **
+
+1. In your WordPress dashboard, create or edit the page where you want the visualization to appear.
+2. Add a **Custom HTML block** (or switch to Code Editor mode).
+3. Paste the following snippet:
+
+   ```html
+   <iframe
+     src="https://example.com/wp-content/uploads/member-cloud/L2Updated_FinalVersion.html"
+     style="width:100%; height:90vh; border:none;"
+     title="Member Cloud Visualization">
+   </iframe>
+Save and preview the page — you should see the interactive member cloud load immediately.
+
+Advantages of this method:
+
+No JavaScript conflicts with WordPress themes or plugins.
+
+All assets (HTML, logos, D3.js) remain isolated.
+
+No need for custom plugins or shortcode registration.
+
+---
+
 
 ## Technical Dependencies
 
@@ -98,3 +174,31 @@ https://yourdomain.com/eea-member-cloud.html?data=members.csv
 - **Web server** (not file:// protocol)
 
 **Impact:** Showcases 200+ EEA members, drives enterprise engagement, supports business development outreach.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
