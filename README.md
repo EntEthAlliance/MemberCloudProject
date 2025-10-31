@@ -5,7 +5,7 @@ Interactive bubble visualization displaying Enterprise Ethereum Alliance members
 ## Quick Start
 
 **Deploy in 3 steps:**
-1. Clone repository and add member logos to `/logos/` folder
+1. Clone repository and add member logos to `/logos/` folder and linkedin & X icons to `/icon/` folder
 2. Start local server: `python3 -m http.server 8080`
 3. Open `http://localhost:8080/L3Updated_FinalVersion.html`
 
