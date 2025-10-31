@@ -7,7 +7,7 @@ Interactive bubble visualization displaying Enterprise Ethereum Alliance members
 **Deploy in 3 steps:**
 1. Clone repository and add member logos to `/logos/` folder
 2. Start local server: `python3 -m http.server 8080`
-3. Open `http://localhost:8080/L2Updated_FinalVersion.html`
+3. Open `http://localhost:8080/L3Updated_FinalVersion.html`
 
 **Timeline:** 5 minutes setup, ready for production use.
 
@@ -83,7 +83,7 @@ https://yourdomain.com/eea-member-cloud.html?data=members.csv
 # Member Cloud Visualization – WordPress Integration Guide
 
 This guide explains how to deploy and embed the **Member Cloud visualization** (powered by D3.js) on a WordPress site.  
-It uses a **self-contained HTML file (`L2Updated_FinalVersion.html`)** and a set of **SVG logo assets**.
+It uses a **self-contained HTML file (`L3Updated_FinalVersion.html`)** and a set of **SVG logo assets**.
 
 ---
 
@@ -92,7 +92,10 @@ It uses a **self-contained HTML file (`L2Updated_FinalVersion.html`)** and a set
 Your project folder should look like this before upload:
 
 Member_Cloud_Project/
-├── L2Updated_FinalVersion.html
+├── L3Updated_FinalVersion.html
+├── icons/
+│ ├── linkedin.png
+│ ├── x.png
 ├── edited_logos/
 │ ├── Accenture.svg
 │ ├── Chainlink Labs.svg
@@ -111,7 +114,10 @@ member-cloud
 Copy code
 4. Upload the following files and folders into it:
 /wp-content/uploads/member-cloud/
-├── L2Updated_FinalVersion.html
+├── L3Updated_FinalVersion.html
+├── icons/
+│ ├── linkedin.png
+│ ├── x.png
 ├── edited_logos/
 │ ├── Accenture.svg
 │ ├── Chainlink Labs.svg
